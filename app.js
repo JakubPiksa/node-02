@@ -3,8 +3,6 @@ const logger = require('morgan');
 const cors = require('cors');
 const router = require('./routes/api/contacts');
 
-const uri = "mongodb+srv://kubapiksa:Programista123!@cluster0.uhvffzf.mongodb.net/?retryWrites=true&w=majority";
-
 const app = express();
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';
 

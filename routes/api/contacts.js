@@ -32,27 +32,33 @@ router.post('/', async (req, res, next) => {
   try {
     const newContact = await addContact(name, email, phone);
     res.status(201).json(newContact);
+
   } catch (error) {
     next(error);
   }
+
 });
 
 router.delete('/:contactId', async (req, res, next) => {
   try {
     await removeContact(req.params.contactId);
     res.json({ message: 'contact deleted' });
+
   } catch (error) {
     next(error);
   }
+
 });
 
 router.put('/:contactId', async (req, res, next) => {
   try {
     const updatedContact = await updateContact(req.params.contactId, req.body);
     res.json(updatedContact);
+    
   } catch (error) {
     next(error);
   }
+
 });
 
 module.exports = router;
