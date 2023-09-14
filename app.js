@@ -3,8 +3,16 @@ const logger = require('morgan');
 const cors = require('cors');
 const router = require('./routes/api/contacts');
 
+const mongoose = require('mongoose');
+
 const app = express();
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';
+
+mongoose.connect('mongodb://localhost/contacts', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+
+});
 
 app.use(logger(formatsLogger));
 app.use(cors());

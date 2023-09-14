@@ -4,6 +4,8 @@ const Joi = require('joi');
 
 const contactsFilePath = path.join(__dirname, 'contacts.json');
 
+const schema = require('../services/contactSchemaMongoose');
+
 const listContacts = async () => {
   const data = await fs.readFile(contactsFilePath, 'utf-8');
   return JSON.parse(data);
