@@ -10,13 +10,12 @@ const validateContact = (contact) => {
 
   return schema.validate(contact);
 };
-
 const listContacts = async () => {
   try {
-    return await Contact.find();
-  } catch (error) {
-    console.error('Error getting contact list:', error);
-    throw error;
+    return await Contact.find()
+  } catch (err) {
+    console.log('Error getting contact list: ', err)
+    throw err
   }
 };
 

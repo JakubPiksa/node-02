@@ -4,9 +4,15 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const dbURI = process.env.uriDb;
 
-mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
+const dbUrl = process.env.uriDb;
+
+mongoose.connect(dbUrl, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+
 
 const app = express();
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';
@@ -35,5 +41,7 @@ app.use((err, req, res, next) => {
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
+
+console.log(dbUrl)
 
 module.exports = app;

@@ -1,14 +1,22 @@
-const mongoose = require('mongoose');
-require('dotenv').config(); 
+const mongoose = require('mongoose')
+require('dotenv').config()
 
-const dbURI = process.env.uriDb;
 
-mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
+const dbUrl = process.env.uriDb
 
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'Błąd połączenia z bazą danych:'));
-db.once('open', () => {
-  console.log('Połączono z bazą danych MongoDB!');
-});
+mongoose.connect(dbUrl, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
 
-module.exports = db;
+const db = mongoose.connection
+db.on('connected', () => {
+    console.log('Database connection successful')
+})
+
+db.on('error', (err) => {
+    console.error('Database connection error:', err)
+    process.exit(1) 
+})
+
+module.exports = db
