@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { updateStatusContact } = require('../../controllers/contactController');
 const {
   listContacts,
   getContactById,
@@ -7,6 +8,7 @@ const {
   addContact,
   updateContact,
 } = require('../../services/contactSchemaMongoose');
+
 
 router.get('/', async (req, res, next) => {
   try {
@@ -17,6 +19,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+
 router.get('/:contactId', async (req, res, next) => {
   try {
     const contact = await getContactById(req.params.contactId);
@@ -25,6 +28,7 @@ router.get('/:contactId', async (req, res, next) => {
     next(error);
   }
 });
+
 
 router.post('/', async (req, res, next) => {
     try {
@@ -35,6 +39,7 @@ router.post('/', async (req, res, next) => {
     }
 })
 
+
 router.delete('/:contactId', async (req, res, next) => {
   try {
     await removeContact(req.params.contactId);
@@ -44,6 +49,7 @@ router.delete('/:contactId', async (req, res, next) => {
   }
 });
 
+
 router.put('/:contactId', async (req, res, next) => {
   try {
     const updatedContact = await updateContact(req.params.contactId, req.body);
@@ -52,5 +58,26 @@ router.put('/:contactId', async (req, res, next) => {
     next(error);
   }
 });
+
+
+router.patch('/:contactId/favorite', async (req, res, next) => {
+  try {
+    const { contactId } = req.params;
+    const { favorite } = req.body;
+    if (favorite === undefined) {
+      return res.status(400).json({ message: 'Missing field favorite' });
+    }
+    const updatedContact = await updateStatusContact(contactId, favorite);
+    if (!updatedContact) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+    res.json(updatedContact);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+
 
 module.exports = router;
