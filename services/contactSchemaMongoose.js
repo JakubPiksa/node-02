@@ -27,11 +27,12 @@ const removeContact = async (contactId) => {
   return await Contact.findByIdAndRemove(contactId);
 };
 
-const addContact = async (name, email, phone) => {
+const addContact = async (name, email, phone, favorite) => {
   const newContact = new Contact({
     name,
     email,
     phone,
+    favorite
   });
 
   const validation = validateContact(newContact);
