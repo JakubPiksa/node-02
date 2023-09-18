@@ -1,7 +1,12 @@
 const Contact = require('../models/contacts');
 
 const listContacts = async () => {
-  return await Contact.find({});
+  try {
+    return await Contact.find()
+  } catch (err) {
+    console.log('Error getting contact list: ', err)
+    throw err
+  }
 };
 
 const getContactById = async (contactId) => {
@@ -12,13 +17,13 @@ const removeContact = async (contactId) => {
   return await Contact.findByIdAndRemove(contactId);
 };
 
-const validateContact = (contactId) => {
-  const schema = Joi.object({
-    name: Joi.string().required(),
-    email: Joi.string().email().required(),
-    phone: Joi.string().required(),
-  });
-};
+// const validateContact = (contactId) => {
+//   const schema = Joi.object({
+//     name: Joi.string().required(),
+//     email: Joi.string().email().required(),
+//     phone: Joi.string().required(),
+//   });
+// };
 
 const addContact = async (name, email, phone) => {
   const newContact = new Contact({
