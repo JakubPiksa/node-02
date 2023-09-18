@@ -2,7 +2,6 @@ const express = require('express');
 const logger = require('morgan');
 const cors = require('cors');
 const mongoose = require('mongoose');
-
 require('dotenv').config();
 
 const dbURI = process.env.uriDb;
@@ -11,8 +10,6 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const app = express();
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';
-
-console.log('URI from .env:', dbURI);
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'Błąd połączenia z bazą danych:'));
@@ -23,7 +20,6 @@ db.once('open', () => {
 app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json());
-
 
 const contactRouter = require('./routes/api/contacts');
 app.use('/api/contacts', contactRouter);

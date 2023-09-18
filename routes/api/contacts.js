@@ -6,7 +6,7 @@ const {
   removeContact,
   addContact,
   updateContact,
-} = require('../../models/contacts');
+} = require('../../services/contactSchemaMongoose');
 
 router.get('/', async (req, res, next) => {
   try {
