@@ -1,32 +1,34 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv'); // Dodane - import dotenv
-const usersRouter = require('./routes/api/users'); // Dodane - import routera dla użytkowników
+const dotenv = require('dotenv');
+const usersRouter = require('./routes/api/users');
 const contactsRouter = require('./routes/api/contacts');
 
-dotenv.config(); // Dodane - konfiguracja dotenv
+dotenv.config();
 
 const app = express();
 
-// Middleware
 app.use(express.json());
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI, {
+const dbUrl = process.env.MONGODB_URI;
+
+mongoose.connect(dbUrl, {
+  dbName: "db-contacts",
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
 const db = mongoose.connection;
+
+
+
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
-// API routes
 app.use('/api/contacts', contactsRouter);
-app.use('/api/users', usersRouter); // Dodane - obsługa tras dla użytkowników
+app.use('/api/users', usersRouter);
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
