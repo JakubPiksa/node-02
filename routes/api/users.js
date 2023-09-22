@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../../models/users');
-const { authenticateToken, logOut, getCurrentUser } = require('../../middleware/authMiddleware');
+const { authenticateToken } = require('../../middleware/authMiddleware');
 require('dotenv').config();
 
 const secretKey = process.env.SECRET_KEY;
@@ -51,9 +51,24 @@ router.post('/login', async (req, res, next) => {
 });
 
 // Endpoint do wylogowywania użytkownika
-router.get('/logout', authenticateToken, logOut);
+router.get('/logout', authenticateToken, async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    await User.findByIdAndUpdate(userId, { token: null });
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Endpoint do pobrania danych bieżącego użytkownika
-router.get('/current', authenticateToken, getCurrentUser);
+router.get('/current', authenticateToken, async (req, res) => {
+  try {
+    const { email, subscription } = req.user;
+    res.json({ email, subscription });
+  } catch (error) {
+    res.status(500).json({ message: 'Could not fetch user data', error: error.message });
+  }
+});
 
 module.exports = router;

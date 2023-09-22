@@ -3,10 +3,13 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const usersRouter = require('./routes/api/users');
 const contactsRouter = require('./routes/api/contacts');
+const morgan = require('morgan');
 
 dotenv.config();
 
 const app = express();
+
+app.use(morgan('dev'));
 
 app.use(express.json());
 
