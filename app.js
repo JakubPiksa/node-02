@@ -1,53 +1,43 @@
 const express = require('express');
-const logger = require('morgan');
-const cors = require('cors');
 const mongoose = require('mongoose');
-require('dotenv').config();
+const dotenv = require('dotenv');
+const usersRouter = require('./routes/api/users');
+const contactsRouter = require('./routes/api/contacts');
+const morgan = require('morgan');
 
-const dbUrl = process.env.uriDb;
+dotenv.config();
 
 const app = express();
-const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';
 
-app.use(logger(formatsLogger));
-app.use(cors());
+app.use(morgan('dev'));
+
 app.use(express.json());
 
+const dbUrl = process.env.MONGODB_URI;
+
+mongoose.connect(dbUrl, {
+  dbName: "db-contacts",
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'Błąd połączenia z bazą danych:'));
+
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', () => {
-  console.log('Połączono z bazą danych MongoDB!');
+
+  console.log('Connected to MongoDB');
 });
 
-const contactRouter = require('./routes/api/contacts');
-app.use('/api/contacts', contactRouter);
-
-app.use((req, res) => {
-  res.status(404).json({ message: 'Not found' });
-});
+app.use('/api/contacts', contactsRouter);
+app.use('/api/users', usersRouter);
 
 app.use((err, req, res, next) => {
-  res.status(500).json({ message: err.message });
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
 });
 
-const runServer = async () => {
-  try {
-    await mongoose.connect(dbUrl, {
-      dbName: 'db-contacts',
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('Database connection successful');
-    app.listen(3000, () => {
-      console.log('Server running. Use our API on port: 3000');
-    });
-  } catch (error) {
-    console.log('Cannot connect to MongoDB');
-    console.error(error);
-    process.exit(1);
-  }
-};
+const PORT = process.env.PORT || 3000;
 
-runServer();
-
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`Server is running on a port ${PORT}`);
+});
