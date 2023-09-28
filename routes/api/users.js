@@ -93,17 +93,31 @@ router.get('/current', authenticateToken, async (req, res) => {
 });
 
 
+const avatarUpload = multer({
+  dest: 'tmp/',
+  limits: {
+    fileSize: 1024 * 1024 * 5, 
+  },
+});
+
+
+//Endpoint do aktualizacji avatara
 router.patch('/avatars', authenticateToken, avatarUpload.single('avatar'), async (req, res, next) => {
   try {
     const user = req.user;
+
+    if (!currentUser) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
     const avatar = await jimp.read(req.file.path);
     await avatar.resize(250, 250); 
-    const avatarFilename = `${user._id}.jpg`; 
 
+    const avatarFilename = `${user._id}.jpg`; 
 
     await avatar.writeAsync(`public/avatars/${avatarFilename}`);
 
@@ -120,11 +134,6 @@ router.patch('/avatars', authenticateToken, avatarUpload.single('avatar'), async
 });
 
 
-const avatarUpload = multer({
-  dest: 'tmp/',
-  limits: {
-    fileSize: 1024 * 1024 * 5, 
-  },
-});
+
 
 module.exports = router;
