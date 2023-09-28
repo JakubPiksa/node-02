@@ -93,47 +93,59 @@ router.get('/current', authenticateToken, async (req, res) => {
 });
 
 
-const avatarUpload = multer({
-  dest: 'tmp/',
-  limits: {
-    fileSize: 1024 * 1024 * 5, 
-  },
-});
 
+const path = require("path");
+const fs = require("fs").promises;
+const uploadDir = path.join(process.cwd(), "tmp")  
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+  limits: {
+    fileSize: 1048576,
+  },
+})
+
+  const avatarUpload = multer({ storage: storage });
+  
 
 //Endpoint do aktualizacji avatara
+
 router.patch('/avatars', authenticateToken, avatarUpload.single('avatar'), async (req, res, next) => {
+  const { path: temporaryName, originalname } = req.file;
+  const { user } = req;
+  const fileName = path.join(uploadDir, originalname);
+  const avatarFilename = `public/avatars/${user._id}.jpg`;
+
+  if (!user) {
+    return res.status(401).json({ message: "Not authorized" });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploded" })
+  }
+
+  
+
   try {
-    const user = req.user;
-
-    if (!currentUser) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-
-    const avatar = await jimp.read(req.file.path);
-    await avatar.resize(250, 250); 
-
-    const avatarFilename = `${user._id}.jpg`; 
-
-    await avatar.writeAsync(`public/avatars/${avatarFilename}`);
-
-    user.avatarURL = `/avatars/${avatarFilename}`;
+    await fs.rename(temporaryName, fileName);
+    const avatarPicture = await jimp.read(fileName);
+    avatarPicture.resize(250, 250).write(avatarFilename);
+    user.avatarURL = avatarFilename;
     await user.save();
+    await fs.unlink(fileName);
+    const { avatarURL } = user;
 
-
-    await jimp.read(req.file.path).then(image => image.remove());
-
-    res.status(200).json({ avatarURL: user.avatarURL });
+    return res.status(200).json({ avatarURL });
   } catch (error) {
+    await fs.unlink(temporaryName);
     next(error);
   }
 });
-
-
 
 
 module.exports = router;
