@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
   },
+  
   avatarURL: String,
   
   verify: {
