@@ -10,9 +10,9 @@ const jimp = require('jimp');
 const gravatar = require("gravatar");
 const { generateVerificationToken, sendVerificationEmail } = require('../../mailConfig.js'); 
 
-const Mailer = require("../../mailConfig");
 
 const secretKey = process.env.SECRET_KEY;
+
 
 // Endpoint do rejestracji użytkownika
 router.post('/signup', async (req, res, next) => {
@@ -93,6 +93,8 @@ router.get('/current', authenticateToken, async (req, res) => {
   }
 });
 
+
+
 const path = require("path");
 const fs = require("fs").promises;
 const uploadDir = path.join(process.cwd(), "tmp")  
@@ -142,7 +144,7 @@ router.patch('/avatars', authenticateToken, avatarUpload.single('avatar'), async
   }
 });
 
-//endsroint do weryfikacji 
+// Endpoint do weryfikacji
 router.get('/verify/:verificationToken', async (req, res) => {
   const { verificationToken } = req.params;
 
@@ -161,11 +163,11 @@ router.get('/verify/:verificationToken', async (req, res) => {
 
     return res.status(200).json({ message: 'Verification successful' });
   } catch (error) {
-    return res.status(500).json({ message: 'Internal server error' });
+    
+    console.error('Error during verification:', error);  
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
-
-
 
 // Endpoint do ponownego wysłania emaila weryfikacyjnego
 router.post('/verify', async (req, res) => {
@@ -193,4 +195,7 @@ router.post('/verify', async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+
+
 module.exports = router;

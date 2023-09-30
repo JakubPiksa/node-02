@@ -5,6 +5,7 @@ require('dotenv').config();
 const emailLogin = process.env.EMAIL_LOGIN;
 const emailPassword = process.env.EMAIL_PASSWORD;
 
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -16,9 +17,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+
 function generateVerificationToken() {
   return uuid.v4();
 }
+
 
 function sendVerificationEmail(email, verificationToken) {
   const mailOptions = {
@@ -28,6 +31,7 @@ function sendVerificationEmail(email, verificationToken) {
     text: `Kliknij poniższy link, aby potwierdzić rejestrację: http://localhost:3000/api/users/verify/${verificationToken}`,
   };
 
+  
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.error("Błąd podczas wysyłania e-maila weryfikacyjnego:", error);
