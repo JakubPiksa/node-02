@@ -9,13 +9,11 @@ const multer = require('multer');
 const jimp = require('jimp');
 
 
-
 const secretKey = process.env.SECRET_KEY;
 
 
-
-
 // Endpoint do rejestracji użytkownika
+
 router.post('/signup', async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -45,6 +43,7 @@ router.post('/signup', async (req, res, next) => {
 });
 
 // Endpoint do logowania użytkownika
+
 router.post('/login', async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -71,7 +70,9 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
+
 // Endpoint do wylogowywania użytkownika
+
 router.get('/logout', authenticateToken, async (req, res, next) => {
   try {
     const userId = req.user._id;
@@ -82,7 +83,9 @@ router.get('/logout', authenticateToken, async (req, res, next) => {
   }
 });
 
+
 // Endpoint do pobrania danych bieżącego użytkownika
+
 router.get('/current', authenticateToken, async (req, res) => {
   try {
     const { email, subscription } = req.user;
