@@ -5,8 +5,15 @@ const bcrypt = require('bcryptjs');
 const User = require('../../models/users');
 const { authenticateToken } = require('../../middleware/authMiddleware');
 require('dotenv').config();
+const multer = require('multer');
+const jimp = require('jimp');
+
+
 
 const secretKey = process.env.SECRET_KEY;
+
+
+
 
 // Endpoint do rejestracji użytkownika
 router.post('/signup', async (req, res, next) => {
@@ -14,10 +21,24 @@ router.post('/signup', async (req, res, next) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ email, password: hashedPassword });
+    const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'identicon' });  
+    const user = new User({
+      email,
+      password: hashedPassword,
+      subscription: 'starter',
+      avatarURL,  
+    });
+    
     await user.save();
 
-    res.status(201).json({ message: 'User registered successfully' });
+    res.status(201).json({
+      user: {
+        email: user.email,
+        subscription: user.subscription,
+        avatarURL: user.avatarURL,
+      },
+      message: 'User registered successfully'
+    });
   } catch (error) {
     res.status(500).json({ message: 'Registration failed', error: error.message });
   }
@@ -70,5 +91,61 @@ router.get('/current', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Could not fetch user data', error: error.message });
   }
 });
+
+
+
+const path = require("path");
+const fs = require("fs").promises;
+const uploadDir = path.join(process.cwd(), "tmp")  
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+  limits: {
+    fileSize: 1048576,
+  },
+})
+
+  const avatarUpload = multer({ storage: storage });
+  
+
+//Endpoint do aktualizacji avatara
+
+router.patch('/avatars', authenticateToken, avatarUpload.single('avatar'), async (req, res, next) => {
+  const { path: temporaryName, originalname } = req.file;
+  const { user } = req;
+  const fileName = path.join(uploadDir, originalname);
+  const avatarFilename = `public/avatars/${user._id}.jpg`;
+
+  if (!user) {
+    return res.status(401).json({ message: "Not authorized" });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploded" })
+  }
+
+  
+
+  try {
+    await fs.rename(temporaryName, fileName);
+    const avatarPicture = await jimp.read(fileName);
+    avatarPicture.resize(250, 250).write(avatarFilename);
+    user.avatarURL = avatarFilename;
+    await user.save();
+    await fs.unlink(fileName);
+    const { avatarURL } = user;
+
+    return res.status(200).json({ avatarURL });
+  } catch (error) {
+    await fs.unlink(temporaryName);
+    next(error);
+  }
+});
+
 
 module.exports = router;
