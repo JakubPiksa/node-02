@@ -8,8 +8,11 @@ require('dotenv').config();
 const multer = require('multer');
 const jimp = require('jimp');
 
+const Mailer = require("../../mailConfig");
 
 const secretKey = process.env.SECRET_KEY;
+
+
 
 
 // Endpoint do rejestracji użytkownika
@@ -153,15 +156,15 @@ router.patch('/avatars', authenticateToken, avatarUpload.single('avatar'), async
 
 
 // Endsroint do weryfikacji 
-const Mailer = require("../../mailConfig");
 
 router.get('/users/verify/:verificationToken', async (req, res) => {
-  const { verificationToken } = req.params;
+  const { verificationToken } = req.params;  
 
   try {
     const user = await User.findOne({ verificationToken });
 
     if (!user) {
+      
       return res.status(404).json({ message: 'User not found' });
     }
 
@@ -172,10 +175,13 @@ router.get('/users/verify/:verificationToken', async (req, res) => {
 
     // Wysłanie e-maila weryfikacyjnego
     const email = user.email;
-    Mailer.sendVerificationEmail(email, verificationToken);
+    const token = generateVerificationToken(); 
+
+    Mailer.sendVerificationEmail(email, token);
 
     return res.status(200).json({ message: 'Verification successful' });
   } catch (error) {
+
     return res.status(500).json({ message: 'Internal server error' });
   }
 });
