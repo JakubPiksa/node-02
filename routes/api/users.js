@@ -7,12 +7,11 @@ const { authenticateToken } = require('../../middleware/authMiddleware');
 require('dotenv').config();
 const multer = require('multer');
 const jimp = require('jimp');
-
+const gravatar = require("gravatar");
+const { generateVerificationToken, sendVerificationEmail } = require('../../mailConfig.js'); 
 
 
 const secretKey = process.env.SECRET_KEY;
-
-
 
 
 // Endpoint do rejestracji użytkownika
@@ -21,12 +20,14 @@ router.post('/signup', async (req, res, next) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = generateVerificationToken(); 
     const avatarURL = gravatar.url(email, { s: '200', r: 'pg', d: 'identicon' });  
     const user = new User({
       email,
       password: hashedPassword,
       subscription: 'starter',
-      avatarURL,  
+      avatarURL,
+      verificationToken, 
     });
     
     await user.save();
@@ -110,11 +111,9 @@ const storage = multer.diskStorage({
   },
 })
 
-  const avatarUpload = multer({ storage: storage });
-  
+const avatarUpload = multer({ storage: storage });
 
 //Endpoint do aktualizacji avatara
-
 router.patch('/avatars', authenticateToken, avatarUpload.single('avatar'), async (req, res, next) => {
   const { path: temporaryName, originalname } = req.file;
   const { user } = req;
@@ -128,8 +127,6 @@ router.patch('/avatars', authenticateToken, avatarUpload.single('avatar'), async
   if (!req.file) {
     return res.status(400).json({ message: "No file uploded" })
   }
-
-  
 
   try {
     await fs.rename(temporaryName, fileName);
@@ -146,6 +143,61 @@ router.patch('/avatars', authenticateToken, avatarUpload.single('avatar'), async
     next(error);
   }
 });
+
+// Endpoint do weryfikacji
+router.get('/verify/:verificationToken', async (req, res) => {
+  const { verificationToken } = req.params;
+
+  try {
+    const user = await User.findOne({ verificationToken });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    await User.findOneAndUpdate(
+      { verificationToken },
+      { verify: true, verificationToken: null},
+    )
+
+
+    const email = user.email;
+
+    return res.status(200).json({ message: 'Verification successful' });
+  } catch (error) {
+
+    console.error('Error during verification:', error);  
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+// Endpoint do ponownego wysłania emaila weryfikacyjnego
+router.post('/verify', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.verify) {
+      return res.status(400).json({ message: 'Verification has already been passed' });
+    }
+
+    const verificationToken = generateVerificationToken();
+    user.verificationToken = verificationToken;
+    await user.save();
+
+    sendVerificationEmail(email, verificationToken);
+
+    return res.status(200).json({ message: 'Verification email sent' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 
 module.exports = router;
